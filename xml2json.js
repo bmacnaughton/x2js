@@ -18,9 +18,9 @@
 function X2JS(config) {
 	'use strict';
 		
-	var VERSION = "1.1.7";
+	var VERSION = "1.2.0";
 	
-	config = config || {};
+	config = config || {attributePrefix: ""};
 	initConfigDefaults();
 	initRequiredPolyfills();
 	
@@ -28,7 +28,12 @@ function X2JS(config) {
 		if(config.escapeMode === undefined) {
 			config.escapeMode = true;
 		}
-		config.attributePrefix = config.attributePrefix || "_";
+		config.lowerCaseAttributes = config.lowerCaseAttributes || true;
+		config.lowerCaseElements = config.lowerCaseElements || true;
+		// need to handle special case for no attribute prefix
+		if (config.attributePrefix !== "") {
+			config.attributePrefix = config.attributePrefix || "_";
+		}
 		config.arrayAccessForm = config.arrayAccessForm || "none";
 		config.emptyNodeForm = config.emptyNodeForm || "text";
 		if(config.enableToStringFunc === undefined) {
@@ -86,11 +91,14 @@ function X2JS(config) {
 	}
 	
 	function getNodeLocalName( node ) {
-		var nodeLocalName = node.localName;			
+		var nodeLocalName = node.localName;
 		if(nodeLocalName == null) // Yeah, this is IE!! 
 			nodeLocalName = node.baseName;
 		if(nodeLocalName == null || nodeLocalName=="") // =="" is IE too
 			nodeLocalName = node.nodeName;
+		if (config.lowerCaseElements) {
+			nodeLocalName = nodeLocalName.toLowerCase();
+		}
 		return nodeLocalName;
 	}
 	
@@ -255,8 +263,12 @@ function X2JS(config) {
 			// Attributes
 			for(var aidx=0; aidx <node.attributes.length; aidx++) {
 				var attr = node.attributes.item(aidx); // [aidx];
+				var name = attr.name;
+				if (config.lowerCaseAttributes) {
+					name = name.toLowerCase();
+				}
 				result.__cnt++;
-				result[config.attributePrefix+attr.name]=attr.value;
+				result[config.attributePrefix+name]=attr.value;
 			}
 			
 			// Node namespace prefix
